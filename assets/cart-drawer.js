@@ -86,6 +86,8 @@ class CartDrawer extends HTMLElement {
   }
 
   getSectionInnerHTML(html, selector = '.shopify-section') {
+    console.log("🚀 ~ file: cart-drawer.js:89 ~ CartDrawer ~ getSectionInnerHTML ~ selector:", selector)
+    
     return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
   }
 

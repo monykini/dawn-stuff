@@ -6,7 +6,8 @@
 {% endcomment %}
 
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
-
+{{ 'ab-empty-cart-products.css' | asset_url | stylesheet_tag }}
+{{ 'ab-empty-cart-products.js' | asset_url | script_tag }}
 <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 
@@ -15,7 +16,6 @@
     visibility: hidden;
   }
 </style>
-
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
   <div id="CartDrawer" class="cart-drawer">
     <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
@@ -28,6 +28,54 @@
     >
       {%- if cart == empty -%}
         <div class="drawer__inner-empty">
+          <div class="cart-drawer__best-sellers">
+            {% assign empty_cart_product = settings.empty_cart_collection.products[0] %}
+            <script id="emptyProductJson" type="application/json">
+              {{ empty_cart_product | json }}
+            </script>
+            <div class="product-card">
+              <div class="product-card__image">
+                <img src="{{ empty_cart_product.featured_image | img_url: '300x300' }}" alt="{{ product.title }}">
+              </div>
+            
+              <div class="product-card__info">
+                <h2> {{ empty_cart_product.title }} - <span class="seleced-varaint-name">{{ empty_cart_product.variants.first.title }}<span></h2>
+                <span class="product-price">{{ empty_cart_product.price | money }}</span>
+                <select class="product-variant" data-product-id="{{ empty_cart_product.id }}">
+                  {% for variant in empty_cart_product.variants | map: "available" %}
+                    <option value="{{ variant.id }}">{{ variant.title }}</option>
+                  {% endfor %}
+                </select>
+                <div class="product-card__controls">
+                  <button class="add-to-cart button" data-variant-id="{{ empty_cart_product.variants.first.id }}">
+                    Add to Cart
+                    <div class="loading-overlay__spinner hidden">
+                      <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                      </svg>
+                    </div>
+                  </button>
+                  <quantity-input class="quantity" data-url="/products/{{ product.handle }}" data-section="template--{{ product.id }}__main">
+                    <button class="quantity__button no-js-hidden disabled" name="minus" type="button">
+                        <span class="visually-hidden">Decrease quantity for {{ product.title }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" class="icon icon-minus" fill="none" viewBox="0 0 10 2">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M.5 1C.5.7.7.5 1 .5h8a.5.5 0 110 1H1A.5.5 0 01.5 1z" fill="currentColor">
+                            </path>
+                        </svg>
+                    </button>
+                    <input class="quantity__input" type="number" name="quantity" id="Quantity-template--{{ product.id }}__main" data-cart-quantity="0" data-min="1" min="1" step="1" value="1" form="product-form-template--{{ product.id }}__main" max="null">
+                    <button class="quantity__button no-js-hidden" name="plus" type="button">
+                        <span class="visually-hidden">Increase quantity for {{ product.title }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" class="icon icon-plus" fill="none" viewBox="0 0 10 10">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 4.51a.5.5 0 000 1h3.5l.01 3.5a.5.5 0 001-.01V5.5l3.5-.01a.5.5 0 00-.01-1H5.5L5.49.99a.5.5 0 00-1 .01v3.5l-3.5.01H1z" fill="currentColor">
+                            </path>
+                        </svg>
+                    </button>
+                  </quantity-input>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
             <div class="cart-drawer__empty-content">
               <h2 class="cart__empty-text">{{ 'sections.cart.empty' | t }}</h2>

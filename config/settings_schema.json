@@ -1443,6 +1443,11 @@
         "default": false
       },
       {
+        "type": "collection",
+        "id": "empty_cart_collection",
+        "label": "Empty Cart Collection"
+      },
+      {
         "type": "checkbox",
         "id": "show_cart_note",
         "label": "t:settings_schema.cart.settings.show_cart_note.label",
