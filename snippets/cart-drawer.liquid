@@ -35,15 +35,15 @@
             </script>
             <div class="product-card">
               <div class="product-card__image">
-                <img src="{{ empty_cart_product.featured_image | img_url: '300x300' }}" alt="{{ product.title }}">
+                <a href="{{ empty_cart_product.url}}"><img src="{{ empty_cart_product.featured_image | img_url: '300x300' }}" alt="{{ product.title }}"></a>
               </div>
             
               <div class="product-card__info">
-                <h2> {{ empty_cart_product.title }} - <span class="seleced-varaint-name">{{ empty_cart_product.variants.first.title }}<span></h2>
+                <a href="{{ empty_cart_product.url}}"><h2> {{ empty_cart_product.title }} - <span class="seleced-varaint-name">{{ empty_cart_product.variants.first.title }}<span></h2></a>
                 <span class="product-price">{{ empty_cart_product.price | money }}</span>
                 <select class="product-variant" data-product-id="{{ empty_cart_product.id }}">
-                  {% for variant in empty_cart_product.variants | map: "available" %}
-                    <option value="{{ variant.id }}">{{ variant.title }}</option>
+                  {% for variant in empty_cart_product.variants %}
+                    <option value="{{ variant.id }}" {% unless variant.available %} disabled {% endunless %}>{{ variant.title }}</option>
                   {% endfor %}
                 </select>
                 <div class="product-card__controls">

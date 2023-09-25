@@ -34,6 +34,7 @@
   {%- endstyle -%}
 {% endunless %}
 
+
 {% capture finalContent %}
 <div class="section-{{ section.id }}-padding">
   {%- paginate collection.products by section.settings.products_per_page -%}
@@ -191,10 +192,6 @@
               {%- endfor -%}
               <!--SPLITINFEND-->
             </ul>
-
-            {%- if paginate.pages > 1 -%}
-              {% render 'pagination', paginate: paginate, anchor: '' %}
-            {%- endif -%}
           </div>
         {%- endif -%}
       </div>
@@ -203,63 +200,94 @@
   {% if section.settings.image_shape == 'arch' %}
     {% render 'mask-arch' %}
   {%- endif -%}
+  <div id="dot-elastic" style="display:none">
+    {% render 'icon-loading-dots' %}
+  </div>
+  <div id="prodsEnded" style="display:none">All products loaded</div>
 </div>
 {% endcapture %}
+
 
 {% if infinite %}
   {% assign finalContentInner = finalContent | split: '<!--SPLITINFEND-->' %}
   {% assign finalContentInner = finalContentInner[0] | split: '<!--SPLITINF-->' %}
   {% assign finalContentInner = finalContentInner[1] %}
   {{ finalContentInner }}
-{% else %}
+{% else %} 
   {{ finalContent }}
 {% endif %}
+{% comment %}  INFINITE SCROLL {% endcomment %}
 <script defer>
+  const infiniteLoader = {
+    currentPage: 2
+  };
   (function () {
-    const productGridContainer = document.getElementById('product-grid');
-    let currentPage = 2;
+    
+    const dotsElastic = document.querySelector("#dot-elastic");
+    const prodsEnded = document.querySelector("#prodsEnded");
+    
     function loadNextPage() {
-      const loaderUrl = `?view=infinite&page=${currentPage}&sections=main-collection-product-grid`;
-      console.log('🚀 ~ file: main-collection-product-grid.liquid:224 ~ loadNextPage ~ loaderUrl:', loaderUrl);
-      fetch(loaderUrl)
+
+        dotsElastic.style.display = "block";
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.set('page', infiniteLoader.currentPage);
+        newUrl.searchParams.set('view', 'infinite');
+        newUrl.searchParams.set('sections', 'main-collection-product-grid');
+        
+        console.log('🚀 ~ file: main-collection-product-grid.liquid:224 ~ loadNextPage ~ loaderUrl:', newUrl.href);
+        
+        fetch(newUrl.href)
         .then((response) => response.json())
         .then((data) => {
-          const mainProdGrid = data['main-collection-product-grid'];
-
-          const products = new DOMParser()
-            .parseFromString(mainProdGrid, 'text/html')
-            .querySelector('#shopify-section-main-collection-product-grid');
-          const numberOfProducts = products.querySelectorAll('li').length;
-          productGridContainer.append(...products.children);
-          console.log(
+            handleData(data);
+        })
+        .finally(function(){
+            dotsElastic.style.display = "none";
+        });
+    }
+    
+    function handleData(data) {
+        const productGridContainer = document.getElementById('product-grid');
+        const mainProdGrid = data['main-collection-product-grid'];
+        const products = new DOMParser()
+        .parseFromString(mainProdGrid, 'text/html')
+        .querySelector('#shopify-section-main-collection-product-grid');
+        const numberOfProducts = products.querySelectorAll('li').length;
+        productGridContainer.append(...products.children);
+        console.log(
             '🚀 ~ file: main-collection-product-grid.liquid:233 ~ .then ~ numberOfProducts:',
             numberOfProducts,
             numberOfProducts == 0
-          );
-          if (numberOfProducts == 0) {
+        );
+        if (numberOfProducts == 0) {
             console.log('Removed');
             window.removeEventListener('scroll', onScroll);
-          } else {
-            currentPage++;
+            prodsEnded.style.display = "block";
+        } else {
+          infiniteLoader.currentPage++;
             window.addEventListener('scroll', onScroll);
-          }
-        });
+        }
     }
-    function onScroll() {
-      const scrolledPercentage = ((window.innerHeight + window.scrollY) / document.documentElement.scrollHeight) * 100;
-      console.log(
-        '🚀 ~ file: main-collection-product-grid.liquid:240 ~ onScroll ~ scrolledPercentage:',
-        scrolledPercentage
-      );
-      if (scrolledPercentage >= 50) {
-        window.removeEventListener('scroll', onScroll);
-        loadNextPage();
-      }
+    
+    function onScroll() { 
+        const scrolledPercentage = ((window.innerHeight + window.scrollY) / document.documentElement.scrollHeight) * 100;
+        console.log("🚀 ~ file: main-collection-product-grid.liquid:277 ~ onScroll ~ scrolledPercentage:", scrolledPercentage)
+        if (scrolledPercentage >= 60  ) {
+            window.removeEventListener('scroll', onScroll);
+            loadNextPage(); 
+        }
     }
+    
     window.addEventListener('DOMContentLoaded', (event) => {
-      window.addEventListener('scroll', onScroll);
+        window.addEventListener('scroll', onScroll);
     });
-  })();
+
+    document.querySelector("#main-collection-filters > div > facet-filters-form").addEventListener('change',  function(e){
+        infiniteLoader.currentPage = 2;
+        window.removeEventListener('scroll', onScroll);
+        window.addEventListener('scroll', onScroll);
+    })
+})();
 </script>
 {% schema %}
 {

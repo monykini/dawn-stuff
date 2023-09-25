@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedVariant) {
                 const selectedVariantNameElement = document.querySelector('.cart-drawer__best-sellers .seleced-varaint-name');
                 const productPriceElement = document.querySelector('.cart-drawer__best-sellers .product-price');
+                selectedVariantNameElement.textContent = selectedVariant.title;
+                productPriceElement.textContent = Shopify.currency.active + " " + (selectedVariant.price / 100).toFixed(2);
             }
         });
 
